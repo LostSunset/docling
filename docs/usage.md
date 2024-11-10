@@ -2,7 +2,7 @@
 
 ### Convert a single document
 
-To convert invidual PDF documents, use `convert()`, for example:
+To convert individual PDF documents, use `convert()`, for example:
 
 ```python
 from docling.document_converter import DocumentConverter
@@ -32,31 +32,42 @@ Here are the available options as of this writing (for an up-to-date listing, ru
 ```console
 $ docling --help
 
- Usage: docling [OPTIONS] source
-
+ Usage: docling [OPTIONS] source                                                                                             
+                                                                                                                             
 ╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ *    input_sources      source  PDF files to convert. Can be local file / directory paths or URL. [default: None]         │
 │                                 [required]                                                                                │
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --from                                     [docx|pptx|html|image|pdf]         Specify input formats to convert from.      │
-│                                                                               Defaults to all formats.                    │
-│                                                                               [default: None]                             │
-│ --to                                       [md|json|text|doctags]             Specify output formats. Defaults to         │
-│                                                                               Markdown.                                   │
-│                                                                               [default: None]                             │
-│ --ocr               --no-ocr                                                  If enabled, the bitmap content will be      │
-│                                                                               processed using OCR.                        │
-│                                                                               [default: ocr]                              │
-│ --ocr-engine                               [easyocr|tesseract_cli|tesseract]  The OCR engine to use. [default: easyocr]   │
-│ --abort-on-error    --no-abort-on-error                                       If enabled, the bitmap content will be      │
-│                                                                               processed using OCR.                        │
-│                                                                               [default: no-abort-on-error]                │
-│ --output                                   PATH                               Output directory where results are saved.   │
-│                                                                               [default: .]                                │
-│ --version                                                                     Show version information.                   │
-│ --help                                                                        Show this message and exit.                 │
+│ --from                                     [docx|pptx|html|image|pdf|asciidoc|md]  Specify input formats to convert from. │
+│                                                                                    Defaults to all formats.               │
+│                                                                                    [default: None]                        │
+│ --to                                       [md|json|text|doctags]                  Specify output formats. Defaults to    │
+│                                                                                    Markdown.                              │
+│                                                                                    [default: None]                        │
+│ --ocr               --no-ocr                                                       If enabled, the bitmap content will be │
+│                                                                                    processed using OCR.                   │
+│                                                                                    [default: ocr]                         │
+│ --ocr-engine                               [easyocr|tesseract_cli|tesseract]       The OCR engine to use.                 │
+│                                                                                    [default: easyocr]                     │
+│ --pdf-backend                              [pypdfium2|dlparse_v1|dlparse_v2]       The PDF backend to use.                │
+│                                                                                    [default: dlparse_v1]                  │
+│ --table-mode                               [fast|accurate]                         The mode to use in the table structure │
+│                                                                                    model.                                 │
+│                                                                                    [default: fast]                        │
+│ --artifacts-path                           PATH                                    If provided, the location of the model │
+│                                                                                    artifacts.                             │
+│                                                                                    [default: None]                        │
+│ --abort-on-error    --no-abort-on-error                                            If enabled, the bitmap content will be │
+│                                                                                    processed using OCR.                   │
+│                                                                                    [default: no-abort-on-error]           │
+│ --output                                   PATH                                    Output directory where results are     │
+│                                                                                    saved.                                 │
+│                                                                                    [default: .]                           │
+│ --version                                                                          Show version information.              │
+│ --help                                                                             Show this message and exit.            │
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
 ```
 </details>
 
@@ -101,6 +112,29 @@ from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMo
 pipeline_options = PdfPipelineOptions(do_table_structure=True)
 pipeline_options.table_structure_options.mode = TableFormerMode.ACCURATE  # use more accurate TableFormer model
 
+doc_converter = DocumentConverter(
+    format_options={
+        InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+    }
+)
+```
+
+##### Provide specific artifacts path
+
+By default, artifacts such as models are downloaded automatically upon first usage. If you would prefer to use a local path where the artifacts have been explicitly prefetched, you can do that as follows:
+
+```python
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
+
+# # to explicitly prefetch:
+# artifacts_path = StandardPdfPipeline.download_models_hf()
+
+artifacts_path = "/local/path/to/artifacts"
+
+pipeline_options = PdfPipelineOptions(artifacts_path=artifacts_path)
 doc_converter = DocumentConverter(
     format_options={
         InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
